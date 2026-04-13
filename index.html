@@ -58,178 +58,182 @@ button {
 <div id="tab2" class="content"></div>
 
 <script>
+let currentModule = "";
 let state = {};
 
-// ---------- TAB SWITCH ----------
+// ---------------- OPEN MODULE ----------------
+function openModule(name){
+  currentModule = name;
+  state = {};
+  document.getElementById("home").classList.add("hidden");
+  document.getElementById("module").classList.remove("hidden");
+  showTab(0);
+}
+
+// ---------------- NAV ----------------
+function goHome(){
+  document.getElementById("module").classList.add("hidden");
+  document.getElementById("home").classList.remove("hidden");
+}
+
 function showTab(i){
-  document.querySelectorAll(".tab").forEach((t,idx)=>{
-    t.classList.toggle("active", idx===i);
-  });
-  document.querySelectorAll(".content").forEach((c,idx)=>{
-    c.classList.toggle("active", idx===i);
-  });
+  document.querySelectorAll(".tab").forEach((t,idx)=>t.classList.toggle("active", idx===i));
+  document.querySelectorAll(".content").forEach((c,idx)=>c.classList.toggle("active", idx===i));
 
-  if(i===0) buildFunnel();
-  if(i===1) buildTimers();
-  if(i===2) buildSOG();
+  if(i===0) buildTab0();
+  if(i===1) buildTab1();
+  if(i===2) buildTab2();
 }
 
-// ---------- FUNNEL ----------
-function buildFunnel(){
+// ---------------- BUTTON SELECT ----------------
+function selectBtn(group, value, el){
+  state[group] = value;
+
+  // remove selection from siblings
+  el.parentElement.querySelectorAll("button").forEach(b=>{
+    b.classList.remove("selected");
+  });
+
+  el.classList.add("selected");
+}
+
+// ---------------- TAB 0 ----------------
+function buildTab0(){
   let c = document.getElementById("tab0");
+  c.innerHTML = "";
 
-  c.innerHTML = `
-    <div class="card">
-      <b>Fire Showing</b>
-      <button onclick="setVal('fire','none')">None</button>
-      <button onclick="setVal('fire','room')">Room</button>
-      <button onclick="setVal('fire','structure')">Structure</button>
-    </div>
+  if(currentModule==="sizeup"){
+    c.innerHTML = `
+      <div class="card">Fire Showing?
+        <button onclick="selectBtn('fire','none',this)">None</button>
+        <button onclick="selectBtn('fire','room',this)">Room</button>
+        <button onclick="selectBtn('fire','structure',this)">Structure</button>
+      </div>
+      <div class="card">Occupancy
+        <button onclick="selectBtn('occ','res',this)">Residential</button>
+        <button onclick="selectBtn('occ','comm',this)">Commercial</button>
+      </div>
+    `;
+  }
 
-    <div class="card">
-      <b>Smoke Condition</b>
-      <button onclick="setVal('smoke','light')">Light</button>
-      <button onclick="setVal('smoke','heavy')">Heavy</button>
-    </div>
+  if(currentModule==="search"){
+    c.innerHTML = `
+      <div class="card">Smoke
+        <button onclick="selectBtn('smoke','light',this)">Light</button>
+        <button onclick="selectBtn('smoke','heavy',this)">Heavy</button>
+      </div>
+      <div class="card">Layout
+        <button onclick="selectBtn('layout','open',this)">Open</button>
+        <button onclick="selectBtn('layout','closed',this)">Closed</button>
+      </div>
+    `;
+  }
 
-    <div class="card">
-      <b>Chief Complaint</b>
-      <button onclick="setVal('cc','chest')">Chest Pain</button>
-      <button onclick="setVal('cc','breathing')">Breathing</button>
-      <button onclick="setVal('cc','ams')">AMS</button>
-    </div>
+  if(currentModule==="medical"){
+    c.innerHTML = `
+      <div class="card">Chief Complaint
+        <button onclick="selectBtn('cc','chest',this)">Chest Pain</button>
+        <button onclick="selectBtn('cc','breathing',this)">Breathing</button>
+        <button onclick="selectBtn('cc','ams',this)">AMS</button>
+      </div>
+    `;
+  }
 
-    <button onclick="processFunnel()">Process →</button>
+  if(currentModule==="stroke"){
+    c.innerHTML = `
+      <div class="card">Last Known Well
+        <button onclick="selectBtn('lkw','<4.5',this)">< 4.5 hrs</button>
+        <button onclick="selectBtn('lkw','>4.5',this)">> 4.5 hrs</button>
+      </div>
+      <div class="card">FAST
+        <button onclick="selectBtn('fast','yes',this)">Positive</button>
+        <button onclick="selectBtn('fast','no',this)">Negative</button>
+      </div>
+    `;
+  }
 
-    <div id="output"></div>
-  `;
+  if(currentModule==="alarm"){
+    c.innerHTML = `
+      <div class="card">Alarm Type
+        <button onclick="selectBtn('alarm','waterflow',this)">Waterflow</button>
+        <button onclick="selectBtn('alarm','smoke',this)">Smoke</button>
+        <button onclick="selectBtn('alarm','trouble',this)">Trouble</button>
+      </div>
+    `;
+  }
 }
 
-function setVal(k,v){ state[k]=v; }
+// ---------------- TAB 1 ----------------
+function buildTab1(){
+  let c = document.getElementById("tab1");
 
-function processFunnel(){
-  let out = "";
+  if(Object.keys(state).length === 0){
+    c.innerHTML = `<div class="card">⚠️ Make selections first</div>`;
+    return;
+  }
 
-  // Fire Mode
-  let mode = "Investigative";
-  if(state.fire==="room") mode="Offensive";
-  if(state.fire==="structure") mode="Defensive";
+  if(currentModule==="sizeup"){
+    let mode = "Investigative";
+    if(state.fire==="room") mode="Offensive";
+    if(state.fire==="structure") mode="Defensive";
+    c.innerHTML = `<div class="card"><b>Mode:</b> ${mode}</div>`;
+    state.mode = mode;
+  }
 
-  // Search Priority
-  let search = state.smoke==="heavy"
-    ? "Bedrooms / survivable spaces"
-    : "Standard search";
+  if(currentModule==="search"){
+    let priority = state.smoke==="heavy" ? "Bedrooms first" : "Standard sweep";
+    c.innerHTML = `<div class="card">${priority}</div>`;
+    state.priority = priority;
+  }
 
-  // Medical
-  let medical = state.cc==="chest"
-    ? "Cardiac alert"
-    : "Standard protocol";
+  if(currentModule==="medical"){
+    let alert = state.cc==="chest" ? "Cardiac Alert" : "Standard Care";
+    c.innerHTML = `<div class="card">${alert}</div>`;
+    state.alert = alert;
+  }
 
-  out = `
-    <div class="card">
-      <b>Mode:</b> ${mode}<br>
-      <b>Search:</b> ${search}<br>
-      <b>Medical:</b> ${medical}
-    </div>
-  `;
+  if(currentModule==="stroke"){
+    let alert = (state.fast==="yes" && state.lkw==="<4.5") ? "Stroke Alert" : "No Alert";
+    c.innerHTML = `<div class="card">${alert}</div>`;
+    state.stroke = alert;
+  }
 
-  document.getElementById("output").innerHTML = out;
+  if(currentModule==="alarm"){
+    let action = state.alarm==="waterflow" ? "Investigate Fire" : "Check Panel";
+    c.innerHTML = `<div class="card">${action}</div>`;
+    state.action = action;
+  }
 }
 
-// ---------- TIMERS ----------
-let pulseInt = null;
-let epiInt = null;
+// ---------------- TAB 2 ----------------
+function buildTab2(){
+  let c = document.getElementById("tab2");
 
-let pulse = 120;
-let epi = 240;
+  if(Object.keys(state).length === 0){
+    c.innerHTML = `<div class="card">⚠️ No decision yet</div>`;
+    return;
+  }
 
-function buildTimers(){
-  document.getElementById("tab1").innerHTML = `
-    <div class="card">
-      <b>2-Min Pulse Check</b>
-      <div class="timer" id="pulse">${format(pulse)}</div>
-      <button onclick="startPulse()">Start</button>
-      <button onclick="resetPulse()">Reset</button>
-    </div>
+  if(currentModule==="sizeup"){
+    c.innerHTML = `<div class="card">Deploy based on <b>${state.mode}</b> mode</div>`;
+  }
 
-    <div class="card">
-      <b>4-Min Epi Timer</b>
-      <div class="timer" id="epi">${format(epi)}</div>
-      <button onclick="startEpi()">Start</button>
-      <button onclick="resetEpi()">Reset</button>
-    </div>
-  `;
+  if(currentModule==="search"){
+    c.innerHTML = `<div class="card">Search: ${state.priority}</div>`;
+  }
+
+  if(currentModule==="medical"){
+    c.innerHTML = `<div class="card">Treatment: ${state.alert}</div>`;
+  }
+
+  if(currentModule==="stroke"){
+    c.innerHTML = `<div class="card">Decision: ${state.stroke}</div>`;
+  }
+
+  if(currentModule==="alarm"){
+    c.innerHTML = `<div class="card">Action: ${state.action}</div>`;
+  }
 }
-
-function format(s){
-  let m = Math.floor(s/60);
-  let sec = s%60;
-  return `${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
-}
-
-function startPulse(){
-  if(pulseInt) return;
-  pulseInt = setInterval(()=>{
-    if(pulse<=0){
-      alert("Pulse Check!");
-      clearInterval(pulseInt);
-      pulseInt=null;
-    } else {
-      pulse--;
-      document.getElementById("pulse").innerText = format(pulse);
-    }
-  },1000);
-}
-
-function resetPulse(){
-  clearInterval(pulseInt);
-  pulseInt=null;
-  pulse=120;
-  document.getElementById("pulse").innerText="02:00";
-}
-
-function startEpi(){
-  if(epiInt) return;
-  epiInt = setInterval(()=>{
-    if(epi<=0){
-      alert("EPI TIME!");
-      clearInterval(epiInt);
-      epiInt=null;
-    } else {
-      epi--;
-      document.getElementById("epi").innerText = format(epi);
-    }
-  },1000);
-}
-
-function resetEpi(){
-  clearInterval(epiInt);
-  epiInt=null;
-  epi=240;
-  document.getElementById("epi").innerText="04:00";
-}
-
-// ---------- SOG ----------
-function buildSOG(){
-  document.getElementById("tab2").innerHTML = `
-    <div class="card">
-      <b>SOG Notes</b>
-      <textarea id="sog" style="width:100%;height:150px;background:#151515;color:#fff;"></textarea>
-      <button onclick="saveSOG()">Save</button>
-    </div>
-  `;
-
-  let saved = localStorage.getItem("sog");
-  if(saved) document.getElementById("sog").value = saved;
-}
-
-function saveSOG(){
-  localStorage.setItem("sog", document.getElementById("sog").value);
-  alert("Saved");
-}
-
-// INIT
-buildFunnel();
 </script>
 
 </body>

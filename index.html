@@ -3,28 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Fire/EMS Toolkit</title>
+<title>Fire / EMS Decision Toolkit</title>
 
 <style>
 body { font-family: Arial; margin:0; background:#111; color:#fff; }
 header { padding:12px; text-align:center; background:#222; }
-
-.tabs { display:flex; }
-.tab {
-  flex:1; padding:12px; text-align:center;
-  background:#333; cursor:pointer;
-}
-.tab.active { background:#555; }
-
-.content { display:none; padding:10px; }
-.content.active { display:block; }
-
-.card {
-  background:#1c1c1c;
-  margin:10px;
-  padding:12px;
-  border-radius:10px;
-}
 
 button {
   width:100%;
@@ -33,35 +16,86 @@ button {
   border:none;
   border-radius:8px;
   font-size:16px;
+  background:#333;
+  color:white;
+  cursor:pointer;
 }
 
-.timer {
-  font-size:32px;
+.card {
+  background:#1c1c1c;
+  margin:10px;
+  padding:10px;
+  border-radius:8px;
+}
+
+.hidden { display:none; }
+
+.tabs { display:flex; }
+.tab {
+  flex:1;
+  padding:10px;
   text-align:center;
-  margin:10px 0;
+  background:#333;
+  cursor:pointer;
+}
+.tab.active { background:#555; }
+
+.content { display:none; padding:10px; }
+.content.active { display:block; }
+
+.back { background:#444; }
+
+.selected { background:#28a745 !important; }
+
+.notice {
+  background:#333;
+  padding:10px;
+  border-radius:8px;
+  margin:10px;
+  text-align:center;
+  opacity:.8;
 }
 </style>
 </head>
 
 <body>
 
-<header><h2>Fire / EMS Toolkit</h2></header>
+<header>
+<h2>Fire / EMS Decision Toolkit</h2>
+</header>
 
-<div class="tabs">
-  <div class="tab active" onclick="showTab(0)">Funnel</div>
-  <div class="tab" onclick="showTab(1)">Timers</div>
-  <div class="tab" onclick="showTab(2)">SOG</div>
+<!-- HOME -->
+<div id="home">
+  <div class="card"><button onclick="openModule('sizeup')">Size-Up Funnel</button></div>
+  <div class="card"><button onclick="openModule('search')">Search Profile</button></div>
+  <div class="card"><button onclick="openModule('medical')">Medical Complaint</button></div>
+  <div class="card"><button onclick="openModule('stroke')">Stroke</button></div>
+  <div class="card"><button onclick="openModule('alarm')">Fire Alarm</button></div>
 </div>
 
-<div id="tab0" class="content active"></div>
-<div id="tab1" class="content"></div>
-<div id="tab2" class="content"></div>
+<!-- MODULE -->
+<div id="module" class="hidden">
+
+  <button class="back" onclick="goHome()">← Back</button>
+
+  <div class="tabs">
+    <div class="tab active" onclick="showTab(0)">Input</div>
+    <div class="tab" onclick="showTab(1)">Process</div>
+    <div class="tab" onclick="showTab(2)">Output</div>
+  </div>
+
+  <div id="tab0" class="content active"></div>
+  <div id="tab1" class="content"></div>
+  <div id="tab2" class="content"></div>
+
+</div>
 
 <script>
+
 let currentModule = "";
 let state = {};
 
-// ---------------- OPEN MODULE ----------------
+// ---------------- NAV ----------------
 function openModule(name){
   currentModule = name;
   state = {};
@@ -70,12 +104,12 @@ function openModule(name){
   showTab(0);
 }
 
-// ---------------- NAV ----------------
 function goHome(){
   document.getElementById("module").classList.add("hidden");
   document.getElementById("home").classList.remove("hidden");
 }
 
+// ---------------- TABS ----------------
 function showTab(i){
   document.querySelectorAll(".tab").forEach((t,idx)=>t.classList.toggle("active", idx===i));
   document.querySelectorAll(".content").forEach((c,idx)=>c.classList.toggle("active", idx===i));
@@ -89,7 +123,6 @@ function showTab(i){
 function selectBtn(group, value, el){
   state[group] = value;
 
-  // remove selection from siblings
   el.parentElement.querySelectorAll("button").forEach(b=>{
     b.classList.remove("selected");
   });
@@ -109,6 +142,7 @@ function buildTab0(){
         <button onclick="selectBtn('fire','room',this)">Room</button>
         <button onclick="selectBtn('fire','structure',this)">Structure</button>
       </div>
+
       <div class="card">Occupancy
         <button onclick="selectBtn('occ','res',this)">Residential</button>
         <button onclick="selectBtn('occ','comm',this)">Commercial</button>
@@ -122,6 +156,7 @@ function buildTab0(){
         <button onclick="selectBtn('smoke','light',this)">Light</button>
         <button onclick="selectBtn('smoke','heavy',this)">Heavy</button>
       </div>
+
       <div class="card">Layout
         <button onclick="selectBtn('layout','open',this)">Open</button>
         <button onclick="selectBtn('layout','closed',this)">Closed</button>
@@ -145,6 +180,7 @@ function buildTab0(){
         <button onclick="selectBtn('lkw','<4.5',this)">< 4.5 hrs</button>
         <button onclick="selectBtn('lkw','>4.5',this)">> 4.5 hrs</button>
       </div>
+
       <div class="card">FAST
         <button onclick="selectBtn('fast','yes',this)">Positive</button>
         <button onclick="selectBtn('fast','no',this)">Negative</button>
@@ -168,7 +204,7 @@ function buildTab1(){
   let c = document.getElementById("tab1");
 
   if(Object.keys(state).length === 0){
-    c.innerHTML = `<div class="card">⚠️ Make selections first</div>`;
+    c.innerHTML = `<div class="notice">Make selections first</div>`;
     return;
   }
 
@@ -176,32 +212,32 @@ function buildTab1(){
     let mode = "Investigative";
     if(state.fire==="room") mode="Offensive";
     if(state.fire==="structure") mode="Defensive";
-    c.innerHTML = `<div class="card"><b>Mode:</b> ${mode}</div>`;
     state.mode = mode;
+    c.innerHTML = `<div class="card"><b>Mode:</b> ${mode}</div>`;
   }
 
   if(currentModule==="search"){
-    let priority = state.smoke==="heavy" ? "Bedrooms first" : "Standard sweep";
-    c.innerHTML = `<div class="card">${priority}</div>`;
+    let priority = state.smoke==="heavy" ? "Bedrooms First" : "Standard Sweep";
     state.priority = priority;
+    c.innerHTML = `<div class="card">${priority}</div>`;
   }
 
   if(currentModule==="medical"){
     let alert = state.cc==="chest" ? "Cardiac Alert" : "Standard Care";
-    c.innerHTML = `<div class="card">${alert}</div>`;
     state.alert = alert;
+    c.innerHTML = `<div class="card">${alert}</div>`;
   }
 
   if(currentModule==="stroke"){
     let alert = (state.fast==="yes" && state.lkw==="<4.5") ? "Stroke Alert" : "No Alert";
-    c.innerHTML = `<div class="card">${alert}</div>`;
     state.stroke = alert;
+    c.innerHTML = `<div class="card">${alert}</div>`;
   }
 
   if(currentModule==="alarm"){
-    let action = state.alarm==="waterflow" ? "Investigate Fire" : "Check Panel";
-    c.innerHTML = `<div class="card">${action}</div>`;
+    let action = state.alarm==="waterflow" ? "Investigate Fire Conditions" : "Check Panel";
     state.action = action;
+    c.innerHTML = `<div class="card">${action}</div>`;
   }
 }
 
@@ -210,30 +246,34 @@ function buildTab2(){
   let c = document.getElementById("tab2");
 
   if(Object.keys(state).length === 0){
-    c.innerHTML = `<div class="card">⚠️ No decision yet</div>`;
+    c.innerHTML = `<div class="notice">No decision yet</div>`;
     return;
   }
 
   if(currentModule==="sizeup"){
-    c.innerHTML = `<div class="card">Deploy based on <b>${state.mode}</b> mode</div>`;
+    c.innerHTML = `<div class="card">Deploy based on <b>${state.mode}</b></div>`;
   }
 
   if(currentModule==="search"){
-    c.innerHTML = `<div class="card">Search: ${state.priority}</div>`;
+    c.innerHTML = `<div class="card">Search Plan: ${state.priority}</div>`;
   }
 
   if(currentModule==="medical"){
-    c.innerHTML = `<div class="card">Treatment: ${state.alert}</div>`;
+    c.innerHTML = `<div class="card">Treatment Path: ${state.alert}</div>`;
   }
 
   if(currentModule==="stroke"){
-    c.innerHTML = `<div class="card">Decision: ${state.stroke}</div>`;
+    c.innerHTML = `<div class="card">Stroke Decision: ${state.stroke}</div>`;
   }
 
   if(currentModule==="alarm"){
     c.innerHTML = `<div class="card">Action: ${state.action}</div>`;
   }
 }
+
+// INIT
+// nothing needed on load
+
 </script>
 
 </body>
